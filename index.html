@@ -6,6 +6,12 @@
   <title>שעון המילים</title>
   <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400&display=swap" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: 'StamAshkenaz';
+      src: url('fonts/StamAshkenazCLM.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
     *, *::before, *::after {
       margin: 0;
       padding: 0;
@@ -20,6 +26,12 @@
       align-items: center;
       justify-content: center;
       font-family: 'Frank Ruhl Libre', 'Times New Roman', Times, serif;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        font-family: 'StamAshkenaz', serif;
+      }
     }
 
     .frame {
