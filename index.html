@@ -102,10 +102,9 @@
     //        before ayin+segol → וָ, default → וְ
 
     function vav(word) {
-      if (/^[שתמבפ]ְ/.test(word)) return 'וּ';   // mobile shva
-      if (/^[חאהע]ֲ/.test(word)) return 'וַ';    // hataf-patach
-      if (/^עֶ/.test(word))       return 'וָ';    // ayin + segol (עֶשֶׂר)
-      return 'וְ';
+      if (/^[שתמבפ]ְ/.test(word)) return 'וּ';   // mobile shva → וּ
+      if (/^[חאהע]ֲ/.test(word)) return 'וַ';    // hataf-patach → וַ
+      return 'וְ';                                 // default
     }
 
     // ── Minute number as Hebrew word ─────────────────────────────────────
