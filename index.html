@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שעון המילים</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f2ede0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Times New Roman', Times, serif;
+    }
+
+    .frame {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #display {
+      font-size: clamp(3rem, 10vw, 9vw);
+      font-weight: 400;
+      color: #111;
+      text-align: center;
+      line-height: 1.55;
+      direction: rtl;
+      transition: opacity 0.5s ease;
+    }
+
+    #display.fade {
+      opacity: 0;
+    }
+
+    .tod {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div id="display"></div>
+  </div>
+
+  <script>
+    // ── Hebrew number tables ──────────────────────────────────────────────
+
+    const HOURS = [
+      'שְׁתֵּים עֶשְׂרֵה', // index 0 → 12 o'clock
+      'אַחַת',
+      'שְׁתַּיִם',
+      'שָׁלוֹשׁ',
+      'אַרְבַּע',
+      'חָמֵשׁ',
+      'שֵׁשׁ',
+      'שֶׁבַע',
+      'שְׁמוֹנֶה',
+      'תֵּשַׁע',
+      'עֶשֶׂר',
+      'אַחַת עֶשְׂרֵה',
+    ];
+
+    // Feminine cardinals 1–19 (used for minutes)
+    const N = [
+      '',
+      'אַחַת',
+      'שְׁתַּיִם',
+      'שָׁלוֹשׁ',
+      'אַרְבַּע',
+      'חָמֵשׁ',
+      'שֵׁשׁ',
+      'שֶׁבַע',
+      'שְׁמוֹנֶה',
+      'תֵּשַׁע',
+      'עֶשֶׂר',
+      'אַחַת עֶשְׂרֵה',
+      'שְׁתֵּים עֶשְׂרֵה',
+      'שְׁלוֹשׁ עֶשְׂרֵה',
+      'אַרְבַּע עֶשְׂרֵה',
+      'חָמֵשׁ עֶשְׂרֵה',
+      'שֵׁשׁ עֶשְׂרֵה',
+      'שְׁבַע עֶשְׂרֵה',
+      'שְׁמוֹנֶה עֶשְׂרֵה',
+      'תְּשַׁע עֶשְׂרֵה',
+    ];
+
+    const TENS = ['', '', 'עֶשְׂרִים', 'שְׁלוֹשִׁים', 'אַרְבָּעִים', 'חֲמִשִּׁים'];
+
+    // ── Conjunction ו vowelling ───────────────────────────────────────────
+    // Rules: before mobile shva → וּ, before hataf-patach (ֲ) → וַ,
+    //        before ayin+segol → וָ, default → וְ
+
+    function vav(word) {
+      if (/^[שתמבפ]ְ/.test(word)) return 'וּ';   // mobile shva
+      if (/^[חאהע]ֲ/.test(word)) return 'וַ';    // hataf-patach
+      if (/^עֶ/.test(word))       return 'וָ';    // ayin + segol (עֶשֶׂר)
+      return 'וְ';
+    }
+
+    // ── Minute number as Hebrew word ─────────────────────────────────────
+
+    function minNum(m) {
+      if (m < 20) return N[m];
+      const t = Math.floor(m / 10), o = m % 10;
+      if (o === 0) return TENS[t];
+      return TENS[t] + ' ' + vav(N[o]) + N[o];
+    }
+
+    // ── "And [minutes]" phrase ────────────────────────────────────────────
+    // 1        → וְדַקָּה
+    // 2–9      → וְ[num] דַּקּוֹת
+    // 10–14,16–29,31–59 → וְ[num]
+    // 15       → וָרֶבַע
+    // 30       → וָחֵצִי
+
+    function andMin(m) {
+      if (m === 0)  return '';
+      if (m === 1)  return 'וְדַקָּה';
+      if (m === 15) return 'וָרֶבַע';
+      if (m === 30) return 'וָחֵצִי';
+      const word = minNum(m);
+      const suffix = ' דַּקּוֹת';
+      return vav(word) + word + suffix;
+    }
+
+    // ── Time of day ──────────────────────────────────────────────────────
+
+    function tod(h) {
+      if (h === 0)                  return '';               // midnight, self-evident
+      if (h >= 1  && h <= 4)        return 'לִפְנוֹת בֹּקֶר';
+      if (h >= 5  && h <= 11)       return 'בַּבֹּקֶר';
+      if (h === 12)                  return 'בַּצָּהֳרַיִם';
+      if (h >= 13 && h <= 14)       return 'בַּצָּהֳרַיִם';
+      if (h >= 15 && h <= 17)       return 'אַחַר הַצָּהֳרַיִם';
+      if (h >= 18 && h <= 21)       return 'בָּעֶרֶב';
+      return 'בַּלַּיְלָה';         // 22–23
+    }
+
+    // ── Main converter ───────────────────────────────────────────────────
+
+    function timeToHebrew(h24, m) {
+      // Midnight
+      if (h24 === 0) {
+        const base = 'חֲצוֹת';
+        return m === 0 ? base : base + ' ' + andMin(m);
+      }
+
+
+      const h12   = h24 % 12 || 12;
+      const hour  = HOURS[h12 % 12];
+      const mins  = m > 0 ? ' ' + andMin(m) : '';
+      const label = tod(h24);
+
+      return { main: hour + mins, tod: label };
+    }
+
+    // ── DOM update ───────────────────────────────────────────────────────
+
+    const el = document.getElementById('display');
+
+    function render() {
+      const now   = new Date();
+      const result = timeToHebrew(now.getHours(), now.getMinutes());
+
+      let html;
+      if (typeof result === 'string') {
+        html = result;
+      } else {
+        html = result.main;
+        if (result.tod) html += '<span class="tod">' + result.tod + '</span>';
+      }
+
+      // Fade out → update → fade in
+      el.classList.add('fade');
+      setTimeout(() => {
+        el.innerHTML = html;
+        el.classList.remove('fade');
+      }, 500);
+    }
+
+    function scheduleNextMinute() {
+      const now   = new Date();
+      const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+      setTimeout(() => {
+        render();
+        setInterval(render, 60000);
+      }, msToNextMinute);
+    }
+
+    render();             // show immediately on load
+    scheduleNextMinute(); // then sync to the minute boundary
+  </script>
+</body>
+</html>
