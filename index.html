@@ -183,14 +183,21 @@
 
     function render() {
       const now   = new Date();
-      const result = timeToHebrew(now.getHours(), now.getMinutes());
+      const m     = now.getMinutes();
+      const result = timeToHebrew(now.getHours(), m);
 
       let html;
       if (typeof result === 'string') {
         html = result;
       } else {
         html = result.main;
-        if (result.tod) html += '<span class="tod">' + result.tod + '</span>';
+        if (result.tod) {
+          if (m === 0) {
+            html += ' ' + result.tod;
+          } else {
+            html += '<span class="tod">' + result.tod + '</span>';
+          }
+        }
       }
 
       // Fade out → update → fade in
