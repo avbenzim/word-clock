@@ -120,6 +120,11 @@
       return 'וְ';                                 // default
     }
 
+    function lamed(word) {
+      if (/^[שתמבפ]ְ/.test(word)) return 'לִ' + word; // mobile shva → לִ
+      return 'לְ' + word;
+    }
+
     // ── Minute number as Hebrew word ─────────────────────────────────────
 
     function minNum(m) {
@@ -139,11 +144,14 @@
     function andMin(m) {
       if (m === 0)  return '';
       if (m === 1)  return 'וְדַקָּה';
+      if (m === 5)  return 'וְחֲמִישָׁה';
+      if (m === 10) return 'וְעֲשָׂרָה';
       if (m === 15) return 'וָרֶבַע';
+      if (m === 20) return 'וְעֶשְׂרִים';
       if (m === 30) return 'וָחֵצִי';
+      if (m === 40) return 'וְאַרְבָּעִים';
       const word = minNum(m);
-      const suffix = ' דַּקּוֹת';
-      return vav(word) + word + suffix;
+      return vav(word) + word + ' דַּקּוֹת';
     }
 
     // ── Time of day ──────────────────────────────────────────────────────
@@ -162,6 +170,14 @@
     // ── Main converter ───────────────────────────────────────────────────
 
     function timeToHebrew(h24, m) {
+      // "X to next hour" for m=55 and m=50
+      if (m === 55 || m === 50) {
+        const nextH24 = (h24 + 1) % 24;
+        const nextH12 = nextH24 % 12 || 12;
+        const word = m === 55 ? 'חֲמִישָׁה' : 'עֲשָׂרָה';
+        return { main: word + ' ' + lamed(HOURS[nextH12 % 12]), tod: tod(nextH24) };
+      }
+
       // Midnight
       if (h24 === 0) {
         const base = 'חֲצוֹת';
